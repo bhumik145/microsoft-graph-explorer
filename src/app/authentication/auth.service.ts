@@ -1,21 +1,32 @@
 import * as Msal from 'msal';
 import { AppComponent } from '../app.component';
+const { oneDS } = (window as any);
 
 const loginType = getLoginType();
 
-export const collectLogs = (error: any): void => {
-    const { awa } = (window as any);
+const appInsights = new oneDS.ApplicationInsights();
 
-    const errorDetails = {
-        errorInfo: {
-            ErrorCategory: 'Graph Explorer - MSAL Error',
-            ErrorMessage: JSON.stringify(error),
+const config = {
+    instrumentationKey: 'a800ae98-f89e-4f96-b491-cf1b8a989bff',
+    channelConfiguration: { // Post channel configuration
+        eventsLimitInMem: 50,
+    },
+    propertyConfiguration: { // Properties Plugin configuration
+        userAgent: 'Custom User Agent',
+    },
+    webAnalyticsConfiguration: { // Web Analytics Plugin configuration
+        autoCapture: {
+            jsError: true,
         },
-    };
+    },
+};
 
-    // Awa is only defined in staging & prod. This check avoids errors in localhost.
-    if (awa) {
-        awa.ct.captureClientError(errorDetails);
+//Initialize SDK
+appInsights.initialize(config, []);
+
+export const collectLogs = (error: any): void => {
+    if (appInsights) {
+        appInsights.trackException({ exception: error });
     }
 };
 
